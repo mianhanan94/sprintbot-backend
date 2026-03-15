@@ -1,0 +1,19 @@
+[project]
+name = "google-sprintbot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk>=1.25.1",
+    "google-cloud-aiplatform>=1.139.0",
+    "google-cloud-firestore>=2.23.0",
+    "google-cloud-logging>=3.13.0",
+    "google-cloud-secret-manager>=2.26.0",
+    "google-cloud-texttospeech>=2.34.0",
+    "google-genai>=1.64.0",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+]
