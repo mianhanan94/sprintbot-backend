@@ -99,6 +99,8 @@ SprintBot is an AI-powered Scrum Master assistant that joins standup meetings, t
 ├── api.py               # FastAPI server: REST, webhooks, WebSocket Live Q&A
 ├── live_session.py       # Gemini Live API session manager
 ├── firestore_client.py   # Firestore CRUD: meetings, participants, repeat offenders
+├── deploy.sh            # Automated deployment script (Cloud Run + Firebase)
+├── cloudbuild.yaml      # Google Cloud Build CI/CD pipeline
 ├── Dockerfile            # Container config for Cloud Run
 ├── pyproject.toml        # Python dependencies (uv)
 └── README.md
@@ -154,25 +156,55 @@ python api.py
 curl -X POST http://localhost:8000/test/pipeline
 ```
 
-## Deploy to Google Cloud Run
+## Automated Cloud Deployment
+
+SprintBot includes automated deployment via a shell script and a Cloud Build CI/CD pipeline.
+
+### One-command deploy (`deploy.sh`)
 
 ```bash
-# Authenticate with Google Cloud
+# Deploy everything (backend + frontend)
+./deploy.sh
+
+# Deploy only the backend (Cloud Run)
+./deploy.sh backend
+
+# Deploy only the frontend (Firebase Hosting)
+./deploy.sh frontend
+```
+
+The script handles pre-flight checks (authentication, project config), builds and deploys the backend to Cloud Run, and optionally builds and deploys the frontend to Firebase Hosting.
+
+### CI/CD with Cloud Build (`cloudbuild.yaml`)
+
+The `cloudbuild.yaml` defines a 3-step pipeline that runs automatically on push to `main`:
+
+1. **Build** — Docker image from `Dockerfile`
+2. **Push** — Image to Google Container Registry (tagged with commit SHA + `latest`)
+3. **Deploy** — Update Cloud Run service with the new image
+
+```bash
+# Set up the Cloud Build trigger (one-time)
+gcloud builds triggers create github \
+  --repo-name=sprintbot-backend \
+  --repo-owner=mianhanan94 \
+  --branch-pattern="^main$" \
+  --build-config=cloudbuild.yaml \
+  --project=sprintbot-488512
+
+# Or trigger a build manually
+gcloud builds submit --config=cloudbuild.yaml .
+```
+
+### Manual deploy (without script)
+
+```bash
 gcloud auth login
-
-# Set your project
-gcloud config set project your-gcp-project-id
-
-# Deploy from source (uses Dockerfile)
+gcloud config set project sprintbot-488512
 gcloud run deploy sprintbot \
   --source . \
   --region us-central1 \
   --allow-unauthenticated
-
-# Set environment variables (secrets)
-gcloud run services update sprintbot \
-  --region us-central1 \
-  --set-env-vars GEMINI_API_KEY=your-key,RECALL_API_KEY=your-key
 ```
 
 ## API Endpoints
